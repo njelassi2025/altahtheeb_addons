@@ -38,16 +38,19 @@ jobs:
           host: ${{ env.HOST }}
           username: ${{ env.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # Fix 1: Ajout de la phrase de passe pour déchiffrer la clé SSH
           passphrase: ${{ secrets.SSH_PASSPHRASE }} 
           script: |
+            # Ajout de l'agent SSH pour que rsync puisse utiliser la clé
+            eval "$(ssh-agent -s)"
+            echo "${{ secrets.SSH_PRIVATE_KEY }}" | ssh-add - > /dev/null
+            
             REMOTE_ADDONS_PATH="${{ env.REMOTE_BASE_PATH }}/addons"
             
             echo "Starting deployment for ${{ env.TARGET_BRANCH }}..."
             
             # 1. Transfer files
             echo "Transferring new addons to $REMOTE_ADDONS_PATH..."
-            # Fix 2: Désactiver la vérification de la clé d'hôte pour rsync
+            # La commande rsync reste inchangée, elle devrait maintenant fonctionner avec l'agent
             rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./ ${{ env.SSH_USER }}@${{ env.HOST }}:$REMOTE_ADDONS_PATH/
             
             # 2. Restart Odoo container
