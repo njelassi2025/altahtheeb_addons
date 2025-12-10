@@ -6,7 +6,7 @@ from odoo.exceptions import ValidationError, UserError
 class EventEvent(models.Model):
     _inherit = 'event.event'
 
-    # ✅ حقول الربط مع طلبات الرحلات المدرسية
+    # حقول الربط مع طلبات الرحلات المدرسية
     trip_id = fields.Many2one(
         'school.trip.request', 
         string="طلب الرحلة المدرسية", 
@@ -25,9 +25,7 @@ class EventEvent(models.Model):
         compute="_compute_can_create_trip"
     )
 
-    # ------------------------------------------------------------
     # Computed Fields
-    # ------------------------------------------------------------
     @api.depends('event_type_id')
     def _compute_is_school_trip(self):
         """تحديد إذا كانت الفعالية رحلة مدرسية بناءً على نوع الفعالية"""
