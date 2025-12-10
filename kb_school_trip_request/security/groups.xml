@@ -1,0 +1,29 @@
+<odoo>
+    <!-- الفئة العامة -->
+    <record id="module_category_school_trip" model="ir.module.category">
+        <field name="name">طلبات الرحلات المدرسية</field>
+        <field name="description">صلاحيات نموذج طلب الرحلات</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- المجموعات -->
+    <record id="group_trip_applicant" model="res.groups">
+        <field name="name">مقدم الطلب</field>
+        <field name="category_id" ref="module_category_school_trip"/>
+    </record>
+
+    <record id="group_trip_leader" model="res.groups">
+        <field name="name">قائد المدرسة</field>
+        <field name="category_id" ref="module_category_school_trip"/>
+    </record>
+
+    <record id="group_trip_transport" model="res.groups">
+        <field name="name">مسؤول النقل</field>
+        <field name="category_id" ref="module_category_school_trip"/>
+    </record>
+
+    <record id="group_trip_manager" model="res.groups">
+        <field name="name">مدير النظام</field>
+        <field name="category_id" ref="module_category_school_trip"/>
+    </record>
+</odoo>

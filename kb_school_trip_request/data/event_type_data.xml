@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- نوع فعالية خاص بالرحلات المدرسية -->
+    <record id="event_type_school_trip" model="event.type">
+        <field name="name">رحلة مدرسية</field>
+        <field name="has_seats_limitation">True</field>
+        <field name="auto_confirm">True</field>
+    </record>
+</odoo>

@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_school_trip_template">
+        <t t-call="web.external_layout">
+            <main>
+                <t t-foreach="docs" t-as="o">
+
+                    <div class="page" style="direction: rtl; text-align: right; font-family: 'Arial', sans-serif; line-height: 2; padding: 20px;">
+
+                        <!-- رقم الطلب -->
+                        <p style="text-align:left; font-size:13px; color:#555;">
+                            <strong>رقم الطلب:</strong> <span t-esc="o.name"/>
+                        </p>
+
+                        <!-- العنوان الرئيسي -->
+                        <h2 style="text-align:center; font-weight:bold; margin-bottom:15px; text-decoration: underline; font-size:20px;">
+                            نموذج طلب رحلة مدرسية
+                        </h2>
+
+                        <p style="margin-bottom:20px; font-size:15px;">
+                            يرجى توفير وسيلة مواصلات حسب البيانات أدناه:
+                        </p>
+
+                        <!-- بيانات الرحلة -->
+                        <table style="width:100%; border-collapse:collapse; font-size:15px; border:1px solid #000;">
+                            <tr>
+                                <td style="border:1px solid #000; width:30%; padding:8px;"><strong>نوع الرحلة:</strong></td>
+                                <td style="border:1px solid #000; width:70%; padding:8px;">
+                                    <t t-if="o.trip_type == 'activity'">رحلة نشاط طلابية</t>
+                                    <t t-if="o.trip_type == 'evening'">دورة مسائية</t>
+                                    <t t-if="o.trip_type == 'other'">أخرى</t>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; padding:8px;"><strong>تاريخ الرحلة:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;">
+                                    <span t-field="o.date_from" t-options="{'widget': 'date', 'format': 'yyyy/MM/dd'}"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; padding:8px;"><strong>اليوم:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;"><span t-esc="o.day_name"/></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; padding:8px;"><strong>عدد الطلاب:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;"><span t-esc="o.students_count"/></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; padding:8px;"><strong>عدد الحافلات:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;"><span t-esc="o.buses_count"/></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; padding:8px;"><strong>من:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;">
+                                    <!-- ✅ FIX: عرض أسماء المدارس بشكل صحيح -->
+                                    <span t-esc="o.school_names"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; padding:8px;"><strong>إلى:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;"><span t-esc="o.direction_to"/></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; padding:8px;"><strong>الغرض من الرحلة:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;"><span t-esc="o.trip_purpose"/></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; padding:8px;"><strong>المرحلة الدراسية:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;">
+                                    <t t-if="o.stage == 'kg'">روضه</t>
+                                    <t t-if="o.stage == 'primary'">الابتدائية</t>
+                                    <t t-if="o.stage == 'middle'">المتوسطة</t>
+                                    <t t-if="o.stage == 'secondary'">الثانوية</t>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- بيانات مقدم الطلب -->
+                        <br/>
+                        <h4 style="text-decoration: underline; font-size:16px; margin-bottom:6px;">بيانات مقدم الطلب:</h4>
+                        <table style="width:100%; border-collapse:collapse; font-size:15px; border:1px solid #000;">
+                            <tr>
+                                <td style="width:30%; border:1px solid #000; padding:8px;"><strong>اسم مقدم الطلب:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;"><span t-esc="o.applicant_name"/></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; padding:8px;"><strong>جوال مقدم الطلب:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;"><span t-esc="o.applicant_mobile"/></td>
+                            </tr>
+                        </table>
+
+                        <!-- اعتماد القيادة والنقل -->
+                        <br/>
+                        <h4 style="text-decoration: underline; font-size:16px; margin-bottom:6px;">اعتماد قائد المدرسة ومسؤول النقل:</h4>
+                        <table style="width:100%; border-collapse:collapse; font-size:15px; border:1px solid #000;">
+                            <tr>
+                                <td style="width:30%; border:1px solid #000; padding:8px;"><strong>اسم قائد المدرسة:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;"><span t-esc="o.school_leader_name"/></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; padding:8px;"><strong>اعتماد مسؤول النقل:</strong></td>
+                                <td style="border:1px solid #000; padding:8px;">
+                                    <t t-if="o.transport_approval">✔ تم الاعتماد</t>
+                                    <t t-if="not o.transport_approval">✖ لم يتم الاعتماد</t>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- ✅ تفاصيل الحافلات (إن وجدت) -->
+                        <t t-if="o.bus_line_ids and o.state == 'approved'">
+                            <br/>
+                            <h4 style="text-decoration: underline; font-size:16px; margin-bottom:6px;">تفاصيل الحافلات:</h4>
+                            <table style="width:100%; border-collapse:collapse; font-size:14px; border:1px solid #000;">
+                                <thead>
+                                    <tr style="background-color: #f0f0f0;">
+                                        <th style="border:1px solid #000; padding:6px; text-align:center;">#</th>
+                                        <th style="border:1px solid #000; padding:6px;">الحافلة</th>
+                                        <th style="border:1px solid #000; padding:6px;">رقم اللوحة</th>
+                                        <th style="border:1px solid #000; padding:6px;">السائق</th>
+                                        <th style="border:1px solid #000; padding:6px;">جوال السائق</th>
+                                        <th style="border:1px solid #000; padding:6px;">المقاعد</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="o.bus_line_ids" t-as="bus">
+                                        <tr>
+                                            <td style="border:1px solid #000; padding:6px; text-align:center;">
+                                                <span t-esc="bus_index + 1"/>
+                                            </td>
+                                            <td style="border:1px solid #000; padding:6px;">
+                                                <span t-esc="bus.vehicle_id.name"/>
+                                            </td>
+                                            <td style="border:1px solid #000; padding:6px;">
+                                                <span t-esc="bus.license_plate"/>
+                                            </td>
+                                            <td style="border:1px solid #000; padding:6px;">
+                                                <span t-esc="bus.driver_id.name or 'غير محدد'"/>
+                                            </td>
+                                            <td style="border:1px solid #000; padding:6px;">
+                                                <span t-esc="bus.driver_mobile or '-'"/>
+                                            </td>
+                                            <td style="border:1px solid #000; padding:6px; text-align:center;">
+                                                <span t-esc="bus.seats"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </t>
+
+                        <!-- ✅ معلومات الفعالية المرتبطة (إن وجدت) -->
+                        <t t-if="o.event_id">
+                            <br/>
+                            <div style="border: 2px solid #4CAF50; padding: 10px; background-color: #f9fff9; border-radius: 5px;">
+                                <p style="margin: 0; font-size: 14px;">
+                                    <strong>📅 الفعالية المرتبطة:</strong> 
+                                    <span t-esc="o.event_id.name"/>
+                                </p>
+                            </div>
+                        </t>
+
+                        <!-- الملاحظة -->
+                        <div style="margin-top:35px; border-top:1px dashed #000; padding-top:10px; font-size:14px;">
+                            <p><strong>ملاحظة:</strong> يجب تقديم الطلب قبل الرحلة بيوم على الأقل.</p>
+                        </div>
+
+                        <!-- التوقيعات -->
+                        <div style="margin-top:40px;">
+                            <table style="width:100%; font-size:14px;">
+                                <tr>
+                                    <td style="width:33%; text-align:center; border-bottom:1px solid #000; padding:50px 0 5px 0;">
+                                        <div>توقيع مقدم الطلب</div>
+                                    </td>
+                                    <td style="width:33%; text-align:center; border-bottom:1px solid #000; padding:50px 0 5px 0;">
+                                        <div>توقيع قائد المدرسة</div>
+                                    </td>
+                                    <td style="width:33%; text-align:center; border-bottom:1px solid #000; padding:50px 0 5px 0;">
+                                        <div>توقيع مسؤول النقل</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                    </div>
+                </t>
+            </main>
+        </t>
+    </template>
+
+    <!-- تعريف التقرير -->
+    <report
+        id="action_school_trip_report_pdf"
+        model="school.trip.request"
+        string="نموذج طلب رحلة مدرسية"
+        report_type="qweb-pdf"
+        name="kb_school_trip_request.report_school_trip_template"
+        file="kb_school_trip_request.report_school_trip_template"
+        print_report_name="'طلب رحلة مدرسية - %s' % (object.name)"
+    />
+</odoo>

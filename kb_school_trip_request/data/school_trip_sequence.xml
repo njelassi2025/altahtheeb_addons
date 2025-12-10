@@ -1,0 +1,11 @@
+<odoo>
+    <record id="seq_school_trip_request" model="ir.sequence">
+        <field name="name">تسلسل طلبات الرحلات المدرسية</field>
+        <field name="code">school.trip.request.sequence</field>
+        <field name="prefix">TRIP/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

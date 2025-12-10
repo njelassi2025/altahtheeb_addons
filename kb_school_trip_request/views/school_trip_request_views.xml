@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 🧾 Tree View -->
+    <record id="view_school_trip_request_tree" model="ir.ui.view">
+        <field name="name">school.trip.request.tree</field>
+        <field name="model">school.trip.request</field>
+        <field name="arch" type="xml">
+            <tree string="طلبات الرحلات المدرسية" 
+                  decoration-success="state == 'approved'" 
+                  decoration-info="state == 'transport'" 
+                  decoration-warning="state == 'leader'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="trip_type"/>
+                <field name="date_from"/>
+                <field name="day_name"/>
+                <field name="students_count"/>
+                <field name="buses_count"/>
+                <field name="trip_purpose"/>
+                <field name="event_id" optional="show"/>
+                <field name="state" widget="badge" 
+                       decoration-success="state == 'approved'"
+                       decoration-info="state == 'transport'"
+                       decoration-warning="state == 'leader'"
+                       decoration-muted="state == 'cancelled'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 📝 Form View -->
+    <record id="view_school_trip_request_form" model="ir.ui.view">
+        <field name="name">school.trip.request.form</field>
+        <field name="model">school.trip.request</field>
+        <field name="arch" type="xml">
+            <form string="طلب رحلة مدرسية">
+
+                <header>
+                    <!-- أزرار سير العمل -->
+                    <button name="action_submit"
+                            string="إرسال إلى قائد المدرسة"
+                            type="object"
+                            states="draft"
+                            class="btn-primary"/>
+
+                    <button name="action_leader_approve"
+                            string="تحويل لمسؤول النقل"
+                            type="object"
+                            states="leader"
+                            class="btn-info"/>
+
+                    <button name="action_approve"
+                            string="اعتماد نهائي"
+                            type="object"
+                            states="transport"
+                            class="btn-success"/>
+
+                    <!-- أزرار إضافية -->
+                    <button name="action_cancel"
+                            string="إلغاء"
+                            type="object"
+                            states="draft,leader,transport"
+                            class="btn-danger"
+                            confirm="هل أنت متأكد من إلغاء هذا الطلب؟"/>
+                    
+                    <button name="action_reset_to_draft"
+                            string="إعادة للمسودة"
+                            type="object"
+                            states="cancelled"
+                            class="btn-secondary"/>
+
+                    <!-- زر الطباعة -->
+                    <button name="%(action_school_trip_report_pdf)d"
+                            string="🖨️ طباعة النموذج"
+                            type="action"
+                            class="btn-secondary"
+                            states="approved"/>
+
+                    <!-- شريط الحالة -->
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,leader,transport,approved"/>
+                </header>
+
+                <sheet>
+                    <!-- ✅ Smart Buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <!-- زر الفعالية المرتبطة -->
+                        <button name="action_view_event"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-calendar"
+                                attrs="{'invisible': [('event_id', '=', False)]}">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">الفعالية</span>
+                                <span class="o_stat_text">المرتبطة</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- ✅ تنبيه: تم إنشاء الطلب من فعالية -->
+                    <div class="alert alert-success" role="alert" 
+                         attrs="{'invisible': [('event_id', '=', False)]}">
+                        <strong>ℹ️ ملاحظة:</strong> 
+                        تم إنشاء هذا الطلب تلقائياً من الفعالية المرتبطة. 
+                        يمكنك تعديل التفاصيل وإكمال عملية الاعتماد.
+                    </div>
+
+                    <!-- بيانات الرحلة الأساسية -->
+                    <group>
+                        <group string="معلومات الرحلة">
+                            <field name="name" readonly="1"/>
+                            <field name="event_id" readonly="1" attrs="{'invisible': [('event_id', '=', False)]}"/>
+                            <field name="trip_type" attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}"/>
+                            <field name="date_from" attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}"/>
+                            <field name="day_name" readonly="1"/>
+                            <field name="trip_purpose" attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}"/>
+                            <field name="stage" attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}"/>
+                        </group>
+                        <group string="تفاصيل النقل">
+                            <field name="students_count" attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}"/>
+                            <field name="buses_count" attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}"/>
+                            <field name="school_ids" 
+                                   widget="many2many_tags" 
+                                   attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}" 
+                                   options="{'no_create': True, 'color_field': 'color'}"/>
+                            <field name="direction_to" attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}"/>
+                        </group>
+                    </group>
+
+                    <!-- بيانات الموافقات -->
+                    <group>
+                        <group string="بيانات مقدم الطلب">
+                            <field name="applicant_name" attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}"/>
+                            <field name="applicant_mobile" 
+                                   attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}"
+                                   placeholder="05xxxxxxxx"/>
+                        </group>
+                        <group string="الموافقات">
+                            <field name="school_leader_name" attrs="{'readonly': [('state', 'in', ['approved', 'cancelled'])]}"/>
+                            <field name="transport_approval" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- ✅ تبويب تفاصيل الحافلات -->
+                    <notebook>
+                        <page string="تفاصيل الحافلات"
+                              attrs="{'invisible': [('state', 'not in', ['transport', 'approved'])]}">
+                            <field name="bus_line_ids"
+                                   attrs="{'readonly': [('state', '=', 'approved')]}">
+                                <tree editable="bottom">
+                                    <field name="vehicle_id" 
+                                           options="{'no_create': True}"
+                                           domain="[('vehicle_type', '=', 'bus')]"/>
+                                    <field name="license_plate" readonly="1"/>
+                                    <field name="driver_id" options="{'no_create': True}"/>
+                                    <field name="driver_mobile" readonly="1"/>
+                                    <field name="seats" readonly="1"/>
+                                    <field name="notes"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <!-- تبويب إضافي للمعلومات -->
+                        <page string="معلومات إضافية">
+                            <group>
+                                <group>
+                                    <field name="create_date" readonly="1"/>
+                                    <field name="create_uid" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="write_date" readonly="1"/>
+                                    <field name="write_uid" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <!-- ✅ شات الملاحظات والتتبع -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread" options="{'post_refresh': 'recipients'}"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- 🔍 Search View -->
+    <record id="view_school_trip_request_search" model="ir.ui.view">
+        <field name="name">school.trip.request.search</field>
+        <field name="model">school.trip.request</field>
+        <field name="arch" type="xml">
+            <search string="بحث في طلبات الرحلات">
+                <field name="name" string="رقم الطلب"/>
+                <field name="trip_purpose" string="الغرض"/>
+                <field name="applicant_name" string="مقدم الطلب"/>
+                <field name="school_ids" string="المدرسة"/>
+                
+                <filter name="draft" string="مسودة" domain="[('state', '=', 'draft')]"/>
+                <filter name="leader" string="قائد المدرسة" domain="[('state', '=', 'leader')]"/>
+                <filter name="transport" string="مسؤول النقل" domain="[('state', '=', 'transport')]"/>
+                <filter name="approved" string="معتمد" domain="[('state', '=', 'approved')]"/>
+                <filter name="cancelled" string="ملغي" domain="[('state', '=', 'cancelled')]"/>
+                
+                <separator/>
+                <filter name="with_event" string="مرتبط بفعالية" domain="[('event_id', '!=', False)]"/>
+                <filter name="without_event" string="بدون فعالية" domain="[('event_id', '=', False)]"/>
+                
+                <separator/>
+                <filter name="this_month" string="هذا الشهر" 
+                        domain="[('date_from', '&gt;=', (context_today() - relativedelta(day=1)).strftime('%Y-%m-%d')),
+                                 ('date_from', '&lt;=', (context_today() + relativedelta(day=31)).strftime('%Y-%m-%d'))]"/>
+                
+                <group expand="0" string="تجميع حسب">
+                    <filter name="group_state" string="الحالة" context="{'group_by': 'state'}"/>
+                    <filter name="group_trip_type" string="نوع الرحلة" context="{'group_by': 'trip_type'}"/>
+                    <filter name="group_stage" string="المرحلة" context="{'group_by': 'stage'}"/>
+                    <filter name="group_date" string="التاريخ" context="{'group_by': 'date_from'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ⚙️ Action -->
+    <record id="action_school_trip_request" model="ir.actions.act_window">
+        <field name="name">طلبات الرحلات المدرسية</field>
+        <field name="res_model">school.trip.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                لا توجد طلبات رحلات حالياً
+            </p>
+            <p>
+                معظم طلبات الرحلات يتم إنشاؤها تلقائياً من الفعاليات.
+                <br/>
+                عند إنشاء فعالية من نوع "رحلة مدرسية"، سيتم إنشاء طلب الرحلة تلقائياً.
+            </p>
+        </field>
+    </record>
+
+    <!-- 📂 Menus -->
+    <menuitem id="menu_school_trip_root" 
+              name="الرحلات المدرسية" 
+              sequence="100"
+              web_icon="kb_school_trip_request,static/description/icon.png"/>
+    
+    <menuitem id="menu_school_trip_request"
+              name="طلبات الرحلات"
+              parent="menu_school_trip_root"
+              action="action_school_trip_request"
+              sequence="10"/>
+
+</odoo>

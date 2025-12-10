@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- توسيع نموذج الفعالية Form View -->
+    <record id="view_event_form_inherit_trip" model="ir.ui.view">
+        <field name="name">event.event.form.inherit.trip</field>
+        <field name="model">event.event</field>
+        <field name="inherit_id" ref="event.view_event_form"/>
+        <field name="arch" type="xml">
+            
+            <!-- ✅ إضافة Smart Button لطلب الرحلة مع زر إنشاء -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <!-- زر عرض طلب الرحلة المرتبط -->
+                <button name="action_view_trip"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-bus"
+                        attrs="{'invisible': [('trip_id', '=', False)]}">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">طلب الرحلة</span>
+                        <span class="o_stat_text">المرتبط</span>
+                    </div>
+                </button>
+                
+                <!-- زر إنشاء طلب رحلة -->
+                <button name="action_create_trip_request"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-plus-square"
+                        attrs="{'invisible': [('can_create_trip', '=', False)]}">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">إنشاء طلب</span>
+                        <span class="o_stat_text">رحلة</span>
+                    </div>
+                </button>
+            </xpath>
+            
+            <!-- حقول مخفية -->
+            <xpath expr="//field[@name='event_type_id']" position="after">
+                <field name="is_school_trip" invisible="1"/>
+                <field name="can_create_trip" invisible="1"/>
+            </xpath>
+            
+            <!-- إضافة حقل طلب الرحلة بعد نوع الفعالية -->
+            <xpath expr="//field[@name='event_type_id']" position="after">
+                <field name="trip_id" 
+                       attrs="{'invisible': [('is_school_trip', '=', False)]}"
+                       readonly="1"/>
+            </xpath>
+            
+            <!-- ✅ إضافة تنبيه إذا كانت الفعالية رحلة مدرسية بدون طلب -->
+            <xpath expr="//sheet" position="inside">
+                <div class="alert alert-info" role="alert" 
+                     attrs="{'invisible': ['|', ('is_school_trip', '=', False), ('trip_id', '!=', False)]}">
+                    <strong>💡 نصيحة:</strong> هذه فعالية رحلة مدرسية. 
+                    يمكنك إنشاء طلب رحلة مرتبط من خلال الزر في الأعلى.
+                    <br/>
+                    سيتم إنشاء طلب الرحلة تلقائياً عند حفظ الفعالية لأول مرة.
+                </div>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- إضافة عمود طلب الرحلة في Tree View -->
+    <record id="view_event_tree_inherit_trip" model="ir.ui.view">
+        <field name="name">event.event.tree.inherit.trip</field>
+        <field name="model">event.event</field>
+        <field name="inherit_id" ref="event.view_event_tree"/>
+        <field name="arch" type="xml">
+            <!-- إضافة حقل trip_id -->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="is_school_trip" optional="hide"/>
+                <field name="trip_id" optional="show" 
+                       attrs="{'invisible': [('is_school_trip', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- ✅ إضافة فلاتر بحث للرحلات المدرسية -->
+    <record id="view_event_search_inherit_trip" model="ir.ui.view">
+        <field name="name">event.event.search.inherit.trip</field>
+        <field name="model">event.event</field>
+        <field name="inherit_id" ref="event.view_event_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter name="school_trips" 
+                        string="الرحلات المدرسية" 
+                        domain="[('is_school_trip', '=', True)]"/>
+                <filter name="with_trip_request" 
+                        string="لديها طلب رحلة" 
+                        domain="[('trip_id', '!=', False)]"/>
+                <filter name="without_trip_request" 
+                        string="بدون طلب رحلة" 
+                        domain="[('is_school_trip', '=', True), ('trip_id', '=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
