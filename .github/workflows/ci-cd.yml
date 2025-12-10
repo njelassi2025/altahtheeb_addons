@@ -41,8 +41,9 @@ jobs:
           username: ${{ env.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }} 
           
-          # Paramètre sync corrigé : source:target et les options rsync
-          sync: "./:$(echo "${{ env.REMOTE_ADDONS_PATH }}" | sed 's/ /\\ /g')"
+          # CORRIGÉ : Utilisation simple de la variable d'environnement
+          # L'action gère elle-même l'interpolation de la variable env dans le sync.
+          sync: "./:${{ env.REMOTE_ADDONS_PATH }}"
           
           # Options rsync avancées
           rsync_options: "-avz --delete"
