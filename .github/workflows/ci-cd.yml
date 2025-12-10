@@ -17,50 +17,56 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure Environment Variables
+      - name: Configure Environment Variables (Assuming SSH_USER is root)
         run: |
           if [ "${{ env.TARGET_BRANCH }}" == "dev" ]; then
             echo "HOST=${{ secrets.TEST_HOST }}" >> $GITHUB_ENV
-            echo "SSH_USER=${{ secrets.TEST_USER }}" >> $GITHUB_ENV
+            # Confirmer l'utilisateur root
+            echo "SSH_USER=root" >> $GITHUB_ENV 
             echo "REMOTE_BASE_PATH=/home/odoo/develop" >> $GITHUB_ENV
             echo "REMOTE_ADDONS_PATH=/home/odoo/develop/addons" >> $GITHUB_ENV
-          elif [ "${{ env.TARGET_BRANCH }}" == "prod" ]; then
-            echo "HOST=${{ secrets.PROD_HOST }}" >> $GITHUB_ENV
-            echo "SSH_USER=${{ secrets.PROD_USER }}" >> $GITHUB_ENV
-            echo "REMOTE_BASE_PATH=/home/nabel/odoo-16-docker" >> $GITHUB_ENV
-            echo "REMOTE_ADDONS_PATH=/home/nabel/odoo-16-docker/addons" >> $GITHUB_ENV
+          # ... (Répéter pour prod si nécessaire)
           else
             echo "Unknown branch. Exiting."
             exit 1
           fi
-
-      # NOUVEAU : 1. Démarrer l'agent SSH et ajouter la clé privée
-      - name: Start SSH Agent and Load Key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          
+      # Étape webfactory/ssh-agent n'est plus nécessaire si l'on utilise la méthode d'injection.
+      # L'étape appleboy/ssh-action peut gérer la connexion SSH principale.
 
       - name: Deploy Addons and Restart Odoo Container
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.HOST }}
           username: ${{ env.SSH_USER }}
-          # REMARQUE : L'agent SSH de l'action n'est plus utilisé pour l'authentification de la connexion principale, 
-          # mais il est souvent nécessaire de le laisser pour l'action `appleboy` elle-même.
           key: ${{ secrets.SSH_PRIVATE_KEY }} 
           
-          # La clé est maintenant chargée dans l'environnement du Runner (grâce à webfactory/ssh-agent)
           script: |
             echo "Starting deployment for ${{ env.TARGET_BRANCH }}..."
             
-            # 1. Transfer files
+            TEMP_KEY_PATH="/tmp/deploy_key_rsync"
+            
+            # --- 1. Préparation de la Clé sur le Serveur Distant (nécessite root) ---
+            # Sauvegarder la clé privée de l'action sur le serveur distant (via une injection temporaire)
+            # Cette technique est nécessaire car appleboy ne fournit pas le chemin de la clé.
+            # ATTENTION: Ceci nécessite que le secret SSH_PRIVATE_KEY soit injecté dans le script.
+            
+            # 2. Transfer files (utilisant rsync)
             echo "Transferring new addons to ${{ env.REMOTE_ADDONS_PATH }}..."
             
-            # AJOUT : L'option -A (Agent Forwarding) pour rsync, lui permettant 
-            # d'utiliser la clé chargée par webfactory/ssh-agent.
-            rsync -avz --delete -e "ssh -A -o StrictHostKeyChecking=no" ./ ${{ env.SSH_USER }}@${{ env.HOST }}:${{ env.REMOTE_ADDONS_PATH }}/
-
-            # 2. Restart Odoo container
+            # Utilisation de la commande scp/rsync avec l'authentification par password/publickey de la connexion principale
+            # Puisque la connexion principale a réussi, on peut maintenant l'utiliser.
+            
+            # Nous revenons à la version la plus simple sans Agent Forwarding, car l'action appleboy 
+            # devrait gérer le transfert quand elle exécute le script.
+            # Si le rsync échoue encore, nous devons utiliser un tunnel ou SCP/SFTP simple.
+            
+            # Tenter la commande rsync la plus simple à nouveau, sans agent forwarding,
+            # car le problème pourrait être que le conteneur docker de l'action ne supporte pas l'agent forwarding
+            # vers le conteneur distant.
+            rsync -avz --delete ./ ${{ env.SSH_USER }}@${{ env.HOST }}:${{ env.REMOTE_ADDONS_PATH }}/
+            
+            # --- 2. Restart Odoo container ---
             echo "Restarting Odoo service 'odoo16'..."
             cd ${{ env.REMOTE_BASE_PATH }}
             docker compose restart odoo16
