@@ -38,6 +38,8 @@ jobs:
           host: ${{ env.HOST }}
           username: ${{ env.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # NOUVEAU : Ajout de la phrase de passe
+          passphrase: ${{ secrets.SSH_PASSPHRASE }} 
           script: |
             REMOTE_ADDONS_PATH="${{ env.REMOTE_BASE_PATH }}/addons"
             
