@@ -37,18 +37,18 @@ jobs:
         with:
           host: ${{ env.HOST }}
           username: ${{ env.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # PASSPHRASE SUPPRIMÉE
+          # Utilise la clé privée NON chiffrée stockée dans les secrets
+          key: ${{ secrets.SSH_PRIVATE_KEY }} 
+          # PASS PHRASE SUPPRIMÉE CAR LA CLÉ EST MAINTENANT NON CHIFFrÉE
           script: |
-            # AGENT SSH SUPPRIMÉ
-            
             REMOTE_ADDONS_PATH="${{ env.REMOTE_BASE_PATH }}/addons"
             
             echo "Starting deployment for ${{ env.TARGET_BRANCH }}..."
             
             # 1. Transfer files
             echo "Transferring new addons to $REMOTE_ADDONS_PATH..."
-            # rsync peut maintenant utiliser la clé non chiffrée
+            # L'option StrictHostKeyChecking=no résout l'erreur de clé d'hôte (connexion)
+            # La clé non chiffrée résout l'erreur 'Permission denied' (authentification)
             rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./ ${{ env.SSH_USER }}@${{ env.HOST }}:$REMOTE_ADDONS_PATH/
             
             # 2. Restart Odoo container
