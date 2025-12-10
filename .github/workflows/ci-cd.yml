@@ -39,19 +39,19 @@ jobs:
         with:
           host: ${{ env.HOST }}
           username: ${{ env.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }} 
-          
-          # CORRIGÉ : Utilisation simple de la variable d'environnement
-          # L'action gère elle-même l'interpolation de la variable env dans le sync.
-          sync: "./:${{ env.REMOTE_ADDONS_PATH }}"
-          
-          # Options rsync avancées
-          rsync_options: "-avz --delete"
-          
-          # Exécuter les commandes APRÈS la synchronisation
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # RETOUR à la méthode script uniquement
           script: |
-            echo "Starting post-deployment actions for ${{ env.TARGET_BRANCH }}..."
+            echo "Starting deployment for ${{ env.TARGET_BRANCH }}..."
             
+            # 1. Transfer files
+            echo "Transferring new addons to ${{ env.REMOTE_ADDONS_PATH }}..."
+            
+            # Utilisation de la commande rsync avec l'authentification de l'agent SSH de l'action
+            # L'action elle-même établit la session SSH, ce qui permet à rsync de fonctionner.
+            # Suppression du StrictHostKeyChecking=no si la clé d'hôte est déjà acceptée (moins sécurisé)
+            rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./ ${{ env.SSH_USER }}@${{ env.HOST }}:${{ env.REMOTE_ADDONS_PATH }}/
+
             # 2. Restart Odoo container
             echo "Restarting Odoo service 'odoo16'..."
             cd ${{ env.REMOTE_BASE_PATH }}
