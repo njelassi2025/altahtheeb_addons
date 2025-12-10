@@ -38,7 +38,7 @@ jobs:
           host: ${{ env.HOST }}
           username: ${{ env.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # NOUVEAU : Ajout de la phrase de passe
+          # Fix 1: Ajout de la phrase de passe pour déchiffrer la clé SSH
           passphrase: ${{ secrets.SSH_PASSPHRASE }} 
           script: |
             REMOTE_ADDONS_PATH="${{ env.REMOTE_BASE_PATH }}/addons"
@@ -47,7 +47,8 @@ jobs:
             
             # 1. Transfer files
             echo "Transferring new addons to $REMOTE_ADDONS_PATH..."
-            rsync -avz --delete ./ ${{ env.SSH_USER }}@${{ env.HOST }}:$REMOTE_ADDONS_PATH/
+            # Fix 2: Désactiver la vérification de la clé d'hôte pour rsync
+            rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./ ${{ env.SSH_USER }}@${{ env.HOST }}:$REMOTE_ADDONS_PATH/
             
             # 2. Restart Odoo container
             echo "Restarting Odoo service 'odoo16'..."
@@ -55,4 +56,3 @@ jobs:
             docker compose restart odoo16
             
             echo "Deployment complete."
-            
