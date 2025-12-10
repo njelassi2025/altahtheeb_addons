@@ -1,0 +1,59 @@
+name: Odoo Addons Deployment
+
+on:
+  push:
+    branches:
+      - dev  # Déclenche la mise à jour et le redémarrage sur le serveur TEST (User: root)
+      - prod # Déclenche la mise à jour et le redémarrage sur le serveur PRODUCTION (User: nabel)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    env:
+      TARGET_BRANCH: ${{ github.ref_name }}
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure Connection Details and Paths
+        id: ssh_config
+        run: |
+          if [ "${{ env.TARGET_BRANCH }}" == "dev" ]; then
+            echo "HOST=${{ secrets.TEST_HOST }}" >> $GITHUB_ENV
+            echo "SSH_USER=${{ secrets.TEST_USER }}" >> $GITHUB_ENV # Utilisateur: root
+            echo "REMOTE_BASE_PATH=/home/odoo/develop" >> $GITHUB_ENV 
+          elif [ "${{ env.TARGET_BRANCH }}" == "prod" ]; then
+            echo "HOST=${{ secrets.PROD_HOST }}" >> $GITHUB_ENV
+            echo "SSH_USER=${{ secrets.PROD_USER }}" >> $GITHUB_ENV # Utilisateur: nabel
+            echo "REMOTE_BASE_PATH=/home/nabel/odoo-16-docker" >> $GITHUB_ENV
+          else
+            echo "Unknown branch. Exiting."
+            exit 1
+          fi
+
+      - name: Deploy Addons and Restart Odoo (Via SSH)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ env.SSH_USER }} 
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            REMOTE_ADDONS_PATH="${{ env.REMOTE_BASE_PATH }}/addons"
+            
+            echo "Starting deployment for ${{ env.TARGET_BRANCH }} to host ${{ env.HOST }} (User: ${{ env.SSH_USER }})"
+            
+            # --- 1. TRANSFERT DES FICHIERS (rsync) ---
+            echo "Transferring new addons to $REMOTE_ADDONS_PATH..."
+            # rsync copie les fichiers de la racine du dépôt (./) vers le dossier addons distant
+            rsync -avz --delete ./ ${{ env.SSH_USER }}@${{ env.HOST }}:$REMOTE_ADDONS_PATH/
+            
+            # --- 2. REDÉMARRAGE DU CONTENEUR ODOO ---
+            echo "Restarting Odoo container 'odoo16'..."
+            cd ${{ env.REMOTE_BASE_PATH }}
+            
+            # Exécute la commande de redémarrage dans le bon répertoire
+            docker compose restart odoo16
+            
+            echo "Deployment for ${{ env.TARGET_BRANCH }} complete."
