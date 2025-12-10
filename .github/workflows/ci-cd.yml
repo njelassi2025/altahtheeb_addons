@@ -23,10 +23,12 @@ jobs:
             echo "HOST=${{ secrets.TEST_HOST }}" >> $GITHUB_ENV
             echo "SSH_USER=${{ secrets.TEST_USER }}" >> $GITHUB_ENV
             echo "REMOTE_BASE_PATH=/home/odoo/develop" >> $GITHUB_ENV
+            echo "REMOTE_ADDONS_PATH=/home/odoo/develop/addons" >> $GITHUB_ENV # Nouveau
           elif [ "${{ env.TARGET_BRANCH }}" == "prod" ]; then
             echo "HOST=${{ secrets.PROD_HOST }}" >> $GITHUB_ENV
             echo "SSH_USER=${{ secrets.PROD_USER }}" >> $GITHUB_ENV
             echo "REMOTE_BASE_PATH=/home/nabel/odoo-16-docker" >> $GITHUB_ENV
+            echo "REMOTE_ADDONS_PATH=/home/nabel/odoo-16-docker/addons" >> $GITHUB_ENV # Nouveau
           else
             echo "Unknown branch. Exiting."
             exit 1
@@ -37,18 +39,17 @@ jobs:
         with:
           host: ${{ env.HOST }}
           username: ${{ env.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }} 
+          
+          # NOUVEAU : Utiliser la fonction de synchronisation native de l'action
+          source: "./" 
+          target: ${{ env.REMOTE_ADDONS_PATH }}
+          # Utiliser la même clé que pour la connexion SSH
+          key_path: ${{ secrets.SSH_PRIVATE_KEY }}
+          
+          # Exécuter les commandes APRÈS la synchronisation
           script: |
-            REMOTE_ADDONS_PATH="${{ env.REMOTE_BASE_PATH }}/addons"
-            # Définir l'emplacement par défaut de la clé privée par l'action
-            KEY_PATH="/root/.ssh/id_rsa"
-            
-            echo "Starting deployment for dev..."
-            
-            # 1. Transfer files
-            echo "Transferring new addons to $REMOTE_ADDONS_PATH..."
-            # FORCER rsync à utiliser la clé privée temporaire (-i $KEY_PATH)
-            rsync -avz --delete -e "ssh -i $KEY_PATH -o StrictHostKeyChecking=no" ./ ${{ env.SSH_USER }}@${{ env.HOST }}:$REMOTE_ADDONS_PATH/
+            echo "Starting post-deployment actions for ${{ env.TARGET_BRANCH }}..."
             
             # 2. Restart Odoo container
             echo "Restarting Odoo service 'odoo16'..."
