@@ -23,12 +23,12 @@ jobs:
             echo "HOST=${{ secrets.TEST_HOST }}" >> $GITHUB_ENV
             echo "SSH_USER=${{ secrets.TEST_USER }}" >> $GITHUB_ENV
             echo "REMOTE_BASE_PATH=/home/odoo/develop" >> $GITHUB_ENV
-            echo "REMOTE_ADDONS_PATH=/home/odoo/develop/addons" >> $GITHUB_ENV # Nouveau
+            echo "REMOTE_ADDONS_PATH=/home/odoo/develop/addons" >> $GITHUB_ENV
           elif [ "${{ env.TARGET_BRANCH }}" == "prod" ]; then
             echo "HOST=${{ secrets.PROD_HOST }}" >> $GITHUB_ENV
             echo "SSH_USER=${{ secrets.PROD_USER }}" >> $GITHUB_ENV
             echo "REMOTE_BASE_PATH=/home/nabel/odoo-16-docker" >> $GITHUB_ENV
-            echo "REMOTE_ADDONS_PATH=/home/nabel/odoo-16-docker/addons" >> $GITHUB_ENV # Nouveau
+            echo "REMOTE_ADDONS_PATH=/home/nabel/odoo-16-docker/addons" >> $GITHUB_ENV
           else
             echo "Unknown branch. Exiting."
             exit 1
@@ -41,11 +41,11 @@ jobs:
           username: ${{ env.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }} 
           
-          # NOUVEAU : Utiliser la fonction de synchronisation native de l'action
-          source: "./" 
-          target: ${{ env.REMOTE_ADDONS_PATH }}
-          # Utiliser la même clé que pour la connexion SSH
-          key_path: ${{ secrets.SSH_PRIVATE_KEY }}
+          # Paramètre sync corrigé : source:target et les options rsync
+          sync: "./:$(echo "${{ env.REMOTE_ADDONS_PATH }}" | sed 's/ /\\ /g')"
+          
+          # Options rsync avancées
+          rsync_options: "-avz --delete"
           
           # Exécuter les commandes APRÈS la synchronisation
           script: |
