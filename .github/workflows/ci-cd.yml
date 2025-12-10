@@ -3,8 +3,8 @@ name: Odoo Addons Deployment
 on:
   push:
     branches:
-      - dev  # Déploiement TEST (root@167.99.242.212)
-      - prod # Déploiement PROD (nabel@209.38.212.146)
+      - dev
+      - prod
 
 jobs:
   deploy:
@@ -17,41 +17,39 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure Connection Details and Paths
-        id: ssh_config
+      - name: Configure Environment Variables
         run: |
           if [ "${{ env.TARGET_BRANCH }}" == "dev" ]; then
             echo "HOST=${{ secrets.TEST_HOST }}" >> $GITHUB_ENV
-            echo "SSH_USER=${{ secrets.TEST_USER }}" >> $GITHUB_ENV 
-            echo "REMOTE_BASE_PATH=/home/odoo/develop" >> $GITHUB_ENV # Chemin DEV/TEST
+            echo "SSH_USER=${{ secrets.TEST_USER }}" >> $GITHUB_ENV
+            echo "REMOTE_BASE_PATH=/home/odoo/develop" >> $GITHUB_ENV
           elif [ "${{ env.TARGET_BRANCH }}" == "prod" ]; then
             echo "HOST=${{ secrets.PROD_HOST }}" >> $GITHUB_ENV
-            echo "SSH_USER=${{ secrets.PROD_USER }}" >> $GITHUB_ENV 
-            echo "REMOTE_BASE_PATH=/home/nabel/odoo-16-docker" >> $GITHUB_ENV # Chemin PROD
+            echo "SSH_USER=${{ secrets.PROD_USER }}" >> $GITHUB_ENV
+            echo "REMOTE_BASE_PATH=/home/nabel/odoo-16-docker" >> $GITHUB_ENV
           else
             echo "Unknown branch. Exiting."
             exit 1
           fi
 
-      - name: Deploy Addons and Restart Odoo
+      - name: Deploy Addons and Restart Odoo Container
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.HOST }}
-          username: ${{ env.SSH_USER }} 
+          username: ${{ env.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             REMOTE_ADDONS_PATH="${{ env.REMOTE_BASE_PATH }}/addons"
             
-            echo "Starting deployment for ${{ env.TARGET_BRANCH }} to host ${{ env.HOST }} (User: ${{ env.SSH_USER }})"
+            echo "Starting deployment for ${{ env.TARGET_BRANCH }}..."
             
-            # 1. TRANSFERT DES FICHIERS (rsync)
+            # 1. Transfer files
             echo "Transferring new addons to $REMOTE_ADDONS_PATH..."
             rsync -avz --delete ./ ${{ env.SSH_USER }}@${{ env.HOST }}:$REMOTE_ADDONS_PATH/
             
-            # 2. REDÉMARRAGE DU CONTENEUR ODOO
-            echo "Restarting Odoo container 'odoo16'..."
+            # 2. Restart Odoo container
+            echo "Restarting Odoo service 'odoo16'..."
             cd ${{ env.REMOTE_BASE_PATH }}
-            
             docker compose restart odoo16
             
-            echo "Deployment for ${{ env.TARGET_BRANCH }} complete."
+            echo "Deployment complete."
